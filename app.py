@@ -254,8 +254,15 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 def run():
-    server = ThreadingHTTPServer(("0.0.0.0", 8000), AppHandler)
-    print("Servidor disponible en http://localhost:8000")
+    port = int(os.getenv("PORT", "8000"))
+    try:
+        server = ThreadingHTTPServer(("0.0.0.0", port), AppHandler)
+    except OSError as exc:
+        print(f"[ERROR] No se pudo iniciar el servidor en el puerto {port}: {exc}")
+        print("Cierra la otra aplicación que use ese puerto o configura PORT con otro valor.")
+        raise
+
+    print(f"Servidor disponible en http://localhost:{port}")
     server.serve_forever()
 
 

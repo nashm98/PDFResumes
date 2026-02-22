@@ -42,6 +42,8 @@ start.bat
 ```
 Este archivo prepara `.venv`, instala dependencias si las hay y abre `http://localhost:8000` automáticamente.
 
+Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y recarga la página.
+
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
 - `OPENAI_MODEL`: modelo a usar (por defecto: `gpt-4.1-mini`).

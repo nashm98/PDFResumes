@@ -42,21 +42,28 @@ for /f "usebackq delims=" %%L in (`findstr /r /v "^[ ]*# ^[ ]*$" requirements.tx
 if defined HAS_DEPS (
   call "%VENV_DIR%\Scripts\python.exe" -m pip install -r requirements.txt
   if errorlevel 1 (
-    echo [WARN] No se pudieron instalar dependencias. Continuando en modo local.
+    echo [WARN] No se pudieron instalar dependencias.
+    echo [WARN] Si subes PDF/DOCX y falla, revisa tu conexion y ejecuta start.bat de nuevo.
   )
 ) else (
   echo [INFO] No hay dependencias obligatorias para instalar.
 )
 
 echo [4/4] Iniciando servidor en http://localhost:%PORT%
-start "" http://localhost:%PORT%
+start "" cmd /c "timeout /t 2 /nobreak >nul && start \"\" http://localhost:%PORT%"
 
 echo.
 echo La app esta levantando. Esta ventana debe quedar abierta.
+echo Si el navegador muestra error al inicio, espera 2-3 segundos y recarga.
 echo Para detener la app, cierra esta ventana o presiona Ctrl + C.
 echo.
 
 call "%VENV_DIR%\Scripts\python.exe" app.py
+if errorlevel 1 (
+  echo.
+  echo [ERROR] El servidor se cerro con error.
+  echo Verifica si el puerto %PORT% ya esta en uso o revisa el mensaje mostrado arriba.
+)
 
 pause
 endlocal
