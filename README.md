@@ -49,6 +49,7 @@ Si quieres usarlo como programa de Windows:
 
 1. Ejecuta `build_exe.bat` (doble clic).
 2. Esto genera `dist\PDFResumesApp.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
+   - El builder usa una ruta corta de sistema (`C:\PDFResumesBuild`) para evitar errores de Windows por *Long Path*.
 3. Abre `PDFResumesApp.exe` y tendrás una aplicación de escritorio (sin abrir navegador).
 
 ## Un solo archivo para ejecutar todo en Windows
