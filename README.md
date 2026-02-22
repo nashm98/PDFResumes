@@ -44,6 +44,13 @@ Este archivo prepara `.venv`, instala dependencias si las hay y abre `http://loc
 
 Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y recarga la página.
 
+## Ejecutable para Windows (.exe)
+Si quieres usarlo como programa de Windows:
+
+1. Ejecuta `build_exe.bat` (doble clic).
+2. Esto genera `dist\PDFResumes.exe`.
+3. Abre `PDFResumes.exe` y se levantará la app + navegador automáticamente.
+
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
 - `OPENAI_MODEL`: modelo a usar (por defecto: `gpt-4.1-mini`).
