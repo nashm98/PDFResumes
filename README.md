@@ -51,6 +51,12 @@ Si quieres usarlo como programa de Windows:
 2. Esto genera `dist\PDFResumes.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
 3. Abre `PDFResumes.exe` y se levantará la app + navegador automáticamente.
 
+## Un solo archivo para ejecutar todo en Windows
+- Haz doble clic en `run_pdfresumes.bat`.
+- Ese archivo hace todo automáticamente:
+  - si no existe `dist\PDFResumes.exe`, lo compila;
+  - luego abre la app sin que tengas que ejecutar más pasos.
+
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
 - `OPENAI_MODEL`: modelo a usar (por defecto: `gpt-4.1-mini`).
