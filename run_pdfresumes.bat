@@ -69,11 +69,11 @@ if /I "%PORT_STATUS%"=="UP" (
   exit /b 0
 )
 
-echo [6/6] Iniciando servidor web y abriendo navegador...
-start "PDFResumesBrowser" cmd /c "timeout /t 2 /nobreak >nul && start \"\" \"%APP_URL%\""
+echo [6/6] Iniciando servidor web...
+start "" "%APP_URL%"
 
 echo.
-echo La app web se esta ejecutando en %APP_URL%
+echo La app web se está ejecutando en %APP_URL%
 echo Mantén esta ventana abierta mientras uses la pagina.
 echo Para detenerla: Ctrl + C
 echo.
@@ -86,4 +86,4 @@ if errorlevel 1 (
 )
 
 pause
-exit /b 1
+exit /b 0

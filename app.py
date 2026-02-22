@@ -59,75 +59,143 @@ def summarize_locally(text: str, max_sentences: int = 5) -> str:
 
 
 def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
-    stopwords = {
-        "para", "como", "entre", "desde", "hasta", "sobre", "durante", "porque", "donde", "cuando",
-        "esta", "este", "estas", "estos", "tambien", "segun", "hacia", "ellos", "ellas", "nosotros",
-        "usted", "ustedes", "ser", "estar", "haber", "tener", "hacer", "poder", "deber", "que", "del",
-        "las", "los", "una", "uno", "unos", "unas", "por", "con", "sin",
-    }
-    generic_words = {
-        "proceso", "resultado", "principalmente", "tambien", "sistema", "metodo", "ocurre", "describe",
-        "mejor", "segun", "texto", "punto", "dentro", "producen", "captura", "sirve", "liberan",
-        "transforman", "través", "general",
-    }
-
-    def keywords_from_sentence(sentence: str) -> list[str]:
-        words = re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence)
-        ranked = [
-            w
-            for w in words
-            if len(w) > 5
-            and w.lower() not in stopwords
-            and w.lower() not in generic_words
-            and not w.lower().endswith(("mente", "cion", "sion", "idad"))
-        ]
-        seen: set[str] = set()
-        ordered: list[str] = []
-        for word in ranked:
-            key = word.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            ordered.append(word)
-        return ordered
-
-    sentences = [clean_text(s) for s in split_sentences(text) if len(clean_text(s)) > 60][:20]
+    sentences = [clean_text(s) for s in split_sentences(text) if 45 <= len(clean_text(s)) <= 260][:35]
     if len(sentences) < 2:
         return []
 
-    quiz: list[QuizQuestion] = []
-    used_topics: set[str] = set()
+    def keyphrases(sentence: str) -> list[str]:
+        patterns = [
+            r"\b\d{1,2} de [a-záéíóúñ]+ de \d{4}\b",  # fechas
+            r"\b(?:19|20)\d{2}\b",  # años
+            r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,3}\b",  # nombres propios
+            r"\b\d+[.,]?\d*\b",  # números
+            r"\"([^\"]{4,80})\"",  # texto entre comillas
+        ]
 
+        found: list[str] = []
+        for pattern in patterns:
+            for m in re.finditer(pattern, sentence, flags=re.IGNORECASE):
+                val = m.group(1) if m.lastindex else m.group(0)
+                val = clean_text(val).strip(" ,.;:()[]{}")
+                if len(val) < 2:
+                    continue
+                if val.lower() in {"primera", "segunda", "tema", "capitulo", "capítulo"}:
+                    continue
+                if val not in found:
+                    found.append(val)
+
+        if not found:
+            words = [w for w in re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence) if len(w) >= 7 and w.lower() not in {"primera", "segunda", "durante", "porque", "tambien"}]
+            for w in words[:3]:
+                if w not in found:
+                    found.append(w)
+
+        return found[:5]
+
+    candidates: list[tuple[str, str]] = []
     for sentence in sentences:
+        picks = [
+            ph for ph in keyphrases(sentence)
+            if ph.lower() in sentence.lower()
+            and not ph.lower().startswith(("la ", "el ", "los ", "las ", "un ", "una "))
+        ]
+        if not picks:
+            continue
+        candidates.append((sentence, picks[0]))
+
+    if len(candidates) < 2:
+        return []
+
+    quiz: list[QuizQuestion] = []
+    used_questions: set[str] = set()
+
+    all_phrases = [ph for _, ph in candidates]
+
+    for sentence, answer in candidates:
         if len(quiz) >= count:
             break
 
-        sentence_keywords = keywords_from_sentence(sentence)
-        topic = sentence_keywords[0] if sentence_keywords else "contenido"
-        if topic.lower() in used_topics:
-            continue
+        mode = len(quiz) % 3
+        if mode == 0:
+            masked = re.sub(re.escape(answer), "_____", sentence, count=1, flags=re.IGNORECASE)
+            question = f"Completa la afirmación según el texto: {masked}"
+            if question in used_questions:
+                continue
 
-        question = f"Según el texto, ¿qué afirmación es correcta sobre '{topic}'?"
-        correct = sentence
+            distractors: list[str] = []
+            for alt in all_phrases:
+                if alt.lower() == answer.lower() or alt in distractors:
+                    continue
+                if answer.lower() in alt.lower() or alt.lower() in answer.lower():
+                    continue
+                distractors.append(alt)
+                if len(distractors) == 3:
+                    break
 
-        distractors = [s for s in sentences if s != correct and topic.lower() not in s.lower()][:2]
-        negated = re.sub(r"\bes\b", "no es", correct, count=1, flags=re.IGNORECASE)
-        if negated != correct and negated not in distractors:
-            distractors.append(negated)
+            if len(distractors) < 3:
+                continue
 
-        while len(distractors) < 3:
-            distractors.append("El texto no entrega información suficiente para este punto.")
+            options = [answer] + distractors[:3]
+            correct = answer
+        else:
+            question = f"Según el texto, ¿qué enunciado es correcto respecto a '{answer}'?"
+            if question in used_questions:
+                continue
 
-        options = [correct] + distractors[:3]
-        shift = len(quiz) % len(options)
+            distractors = [s for s in sentences if s != sentence][:3]
+            if len(distractors) < 3:
+                continue
+            options = [sentence] + distractors
+            correct = sentence
+
+        shift = len(quiz) % 4
         options = options[shift:] + options[:shift]
 
-        used_topics.add(topic.lower())
         quiz.append(QuizQuestion(question=question, options=options, answer=correct))
+        used_questions.add(question)
 
     return quiz
 
 
+def generate_quiz_with_ai(text: str) -> list[QuizQuestion]:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return generate_quiz_locally(text)
+
+    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    prompt = (
+        "Genera 5 preguntas de opción múltiple en español sobre el texto. "
+        "Devuelve SOLO JSON con formato: "
+        "[{\"question\":str,\"options\":[str,str,str,str],\"answer\":str}]. "
+        "La respuesta correcta debe estar incluida exactamente dentro de options."
+    )
+    body = {
+        "model": model,
+        "input": f"{prompt}\n\nTEXTO:\n{text[:18000]}",
+    }
+    req = urlrequest.Request(
+        "https://api.openai.com/v1/responses",
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urlrequest.urlopen(req, timeout=60) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        raw = (data.get("output_text") or "").strip()
+        parsed = json.loads(raw)
+        quiz: list[QuizQuestion] = []
+        for item in parsed:
+            question = clean_text(str(item.get("question", "")))
+            options = [clean_text(str(o)) for o in item.get("options", []) if clean_text(str(o))]
+            answer = clean_text(str(item.get("answer", "")))
+            if not question or len(options) != 4 or answer not in options:
+                continue
+            quiz.append(QuizQuestion(question=question, options=options, answer=answer))
+        return quiz or generate_quiz_locally(text)
+    except Exception:
+        return generate_quiz_locally(text)
 def extract_pdf_text(file_path: Path) -> str:
     try:
         from pypdf import PdfReader
@@ -308,7 +376,7 @@ class AppHandler(BaseHTTPRequestHandler):
             return
 
         summary = summarize_with_ai(text)
-        quiz = generate_quiz_locally(text)
+        quiz = generate_quiz_with_ai(text)
 
         self._send_json(
             {

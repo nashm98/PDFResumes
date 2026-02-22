@@ -2,7 +2,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from app import clean_text, extract_text_from_upload, generate_quiz_locally, summarize_with_ai
+from app import clean_text, extract_text_from_upload, generate_quiz_with_ai, summarize_with_ai
 
 
 class PDFResumesDesktopApp:
@@ -140,7 +140,7 @@ class PDFResumesDesktopApp:
                 raise ValueError("El archivo no contiene suficiente texto para procesar.")
 
             summary = summarize_with_ai(text)
-            quiz = generate_quiz_locally(text)
+            quiz = generate_quiz_with_ai(text)
         except Exception as exc:
             messagebox.showerror("Error", f"No se pudo procesar el archivo:\n{exc}")
             self.status_var.set("Error al procesar el archivo")

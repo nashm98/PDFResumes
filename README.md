@@ -8,7 +8,7 @@ Aplicación web para resumir documentos y generar quizzes tipo preguntas con alt
 - Resumen en español:
   - Con IA (si defines `OPENAI_API_KEY`).
   - Con fallback local automático (sin API key).
-- Quiz de opción múltiple basado en el documento.
+- Quiz de opción múltiple basado en el documento (con IA si hay `OPENAI_API_KEY`, o fallback local mejorado).
 
 > Nota: para leer PDFs se usa `pypdf` (incluido en `requirements.txt`).
 
@@ -41,7 +41,7 @@ Este script:
   - crea/usa `.venv`,
   - instala dependencias (`requirements.txt`),
   - verifica si ya hay un servidor HTTP activo en `127.0.0.1:8000`,
-  - si no existe, valida `app.py`, inicia servidor en primer plano y abre navegador automáticamente con un pequeño delay,
+  - si no existe, valida `app.py`, inicia servidor en primer plano y abre navegador automáticamente,
   - si el servidor cae, muestra error en la misma consola.
 
 > Nota: el launcher no depende de PowerShell para healthcheck (evita cuelgues silenciosos en algunos Windows).
