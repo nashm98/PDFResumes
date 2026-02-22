@@ -34,33 +34,21 @@ Este script:
 - Intenta instalar `requirements.txt` (si falla por red, continúa en modo local).
 - Inicia el servidor y abre el navegador automáticamente en `http://localhost:8000`.
 
-## Inicio rápido en Windows (doble clic)
-- Haz doble clic en `start.bat`.
-- O desde CMD/PowerShell:
-```bat
-start.bat
-```
-Este archivo prepara `.venv`, instala dependencias si las hay y abre `http://localhost:8000` automáticamente.
+## Inicio rápido en Windows (UN solo archivo)
+- Haz doble clic en `run_pdfresumes.bat`.
+- Ese único archivo hace todo automáticamente para abrir la **página web**:
+  - verifica Python,
+  - crea/usa `.venv`,
+  - instala dependencias (`requirements.txt`),
+  - valida si el puerto `8000` ya está en uso,
+  - abre `http://localhost:8000`,
+  - y deja corriendo el servidor.
 
 Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y recarga la página.
 
-## Ejecutable para Windows (.exe)
-Si quieres usarlo como programa de Windows:
-
-1. Ejecuta `build_exe.bat` (doble clic).
-2. Esto genera `dist\PDFResumesApp.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
-   - El builder usa una ruta corta de sistema (`C:\PDFResumesBuild`) para evitar errores de Windows por *Long Path*.
-3. Abre `PDFResumesApp.exe` y tendrás una aplicación de escritorio (sin abrir navegador).
-
-## Un solo archivo para ejecutar todo en Windows
-- Haz doble clic en `run_pdfresumes.bat`.
-- Ese archivo hace todo automáticamente:
-  - si no existe `dist\PDFResumesApp.exe`, lo compila;
-  - si detecta un ejecutable antiguo sin marca de build, lo recompila para incluir dependencias;
-  - luego abre la app de escritorio sin que tengas que ejecutar más pasos.
-
-## Modo escritorio
-- `desktop_app.py` ejecuta la app como interfaz nativa de Windows (Tkinter), sin servidor web ni navegador, con interfaz visual moderna en escala de negros.
+## Compatibilidad
+- `start.bat` se mantiene por compatibilidad y ahora delega en `run_pdfresumes.bat`.
+- `build_exe.bat` y `desktop_app.py` quedan como flujo opcional para modo escritorio, pero el flujo recomendado es web con `run_pdfresumes.bat`.
 
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
