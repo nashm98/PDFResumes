@@ -23,6 +23,15 @@ python app.py
 ```
 Abre: `http://localhost:8000`
 
+## Inicio rápido (automático)
+```bash
+./start.sh
+```
+Este script:
+- Crea y activa `.venv` si no existe.
+- Intenta instalar `requirements.txt` (si falla por red, continúa en modo local).
+- Inicia el servidor y abre el navegador automáticamente en `http://localhost:8000`.
+
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
 - `OPENAI_MODEL`: modelo a usar (por defecto: `gpt-4.1-mini`).
