@@ -58,45 +58,89 @@ def summarize_locally(text: str, max_sentences: int = 5) -> str:
 
 
 def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
+    stopwords = {
+        "para", "como", "entre", "desde", "hasta", "sobre", "durante", "porque", "donde", "cuando",
+        "esta", "este", "estas", "estos", "tambien", "segun", "hacia", "ellos", "ellas", "nosotros",
+        "usted", "ustedes", "ser", "estar", "haber", "tener", "hacer", "poder", "deber", "que", "del",
+        "las", "los", "una", "uno", "unos", "unas", "por", "con", "sin",
+    }
+    generic_words = {"proceso", "resultado", "principalmente", "tambien", "sistema", "metodo"}
+
+    def keywords_from_sentence(sentence: str) -> list[str]:
+        words = re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence)
+        ranked = [w for w in words if len(w) > 5 and w.lower() not in stopwords and w.lower() not in generic_words]
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for word in ranked:
+            key = word.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            ordered.append(word)
+        return ordered
+
     sentences = split_sentences(text)
+    usable = [s for s in sentences if len(s) > 60][:20]
+    if not usable:
+        return []
+
     quiz: list[QuizQuestion] = []
-    usable = sentences[: min(20, len(sentences))]
+    pool_keywords: list[str] = []
+    used_topics: set[str] = set()
+    for sentence in usable:
+        pool_keywords.extend(keywords_from_sentence(sentence)[:2])
 
-    for i, sentence in enumerate(usable[:count]):
-        words = [w for w in re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence) if len(w) > 4]
-        if len(words) < 2:
+    for sentence in usable:
+        if len(quiz) >= count:
+            break
+
+        sentence_keywords = keywords_from_sentence(sentence)
+        if not sentence_keywords:
             continue
-        answer = words[1]
-        masked = re.sub(rf"\b{re.escape(answer)}\b", "_____", sentence, count=1)
 
-        distractors = []
+        topic = sentence_keywords[0]
+        if topic.lower() in used_topics:
+            continue
+        question = f"Según el texto, ¿cuál afirmación describe mejor el punto sobre '{topic}'?"
+
+        correct = clean_text(sentence)
+        distractors: list[str] = []
+
         for other in usable:
-            candidates = [
-                w
-                for w in re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", other)
-                if len(w) > 4 and w.lower() != answer.lower()
-            ]
-            if candidates:
-                distractors.append(candidates[0])
-            if len(distractors) >= 3:
+            other_clean = clean_text(other)
+            if other_clean == correct or topic.lower() in other_clean.lower():
+                continue
+            distractors.append(other_clean)
+            if len(distractors) == 2:
                 break
 
-        options = list(dict.fromkeys([answer] + distractors))
-        if len(options) < 2:
+        for alt in pool_keywords:
+            if len(distractors) >= 3:
+                break
+            if alt.lower() == topic.lower():
+                continue
+            replaced = re.sub(rf"\b{re.escape(topic)}\b", alt, correct, count=1, flags=re.IGNORECASE)
+            replaced = clean_text(replaced)
+            if replaced != correct and replaced not in distractors:
+                distractors.append(replaced)
+
+        if len(distractors) < 3:
             continue
-        shift = i % len(options)
+
+        options = [correct] + distractors[:3]
+        shift = len(quiz) % len(options)
         options = options[shift:] + options[:shift]
 
+        used_topics.add(topic.lower())
         quiz.append(
             QuizQuestion(
-                question=f"¿Qué palabra completa correctamente la frase?\n\n{masked}",
+                question=question,
                 options=options,
-                answer=answer,
+                answer=correct,
             )
         )
+
     return quiz
-
-
 def extract_pdf_text(file_path: Path) -> str:
     try:
         from pypdf import PdfReader

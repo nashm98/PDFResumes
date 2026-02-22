@@ -22,6 +22,34 @@ function hideSection(section) {
   section.classList.add('hidden');
 }
 
+
+function renderSummary(summary) {
+  summaryOutput.innerHTML = '';
+  const text = (summary || '').trim();
+  if (!text) {
+    summaryOutput.innerHTML = '<p>No se pudo generar resumen.</p>';
+    return;
+  }
+
+  const bullets = text
+    .split('\\n')
+    .map((line) => line.replace(/^\s*[•\-*]\s*/, '').trim())
+    .filter(Boolean);
+
+  const items = bullets.length > 0 ? bullets : [text];
+  const list = document.createElement('ol');
+  list.className = 'summary-list';
+
+  items.forEach((item) => {
+    const li = document.createElement('li');
+    li.className = 'summary-item';
+    li.textContent = item;
+    list.appendChild(li);
+  });
+
+  summaryOutput.appendChild(list);
+}
+
 function renderQuiz(quiz) {
   quizOutput.innerHTML = '';
 
@@ -107,7 +135,7 @@ form.addEventListener('submit', async (event) => {
       throw new Error(data.error || 'Error inesperado al procesar el archivo.');
     }
 
-    summaryOutput.textContent = data.summary || 'No se pudo generar resumen.';
+    renderSummary(data.summary);
     renderQuiz(data.quiz || []);
 
     showSection(summarySection);

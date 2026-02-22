@@ -152,11 +152,24 @@ button:disabled {
 
 h2 { margin-top: 0; }
 
-pre {
+.summary-output {
   margin: 0;
-  white-space: pre-wrap;
-  font-family: inherit;
-  line-height: 1.6;
+}
+
+.summary-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.summary-item {
+  line-height: 1.65;
+  color: #deebff;
+  background: rgba(17, 27, 58, 0.78);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
 }
 
 .hidden { display: none !important; }
@@ -172,7 +185,8 @@ pre {
 .quiz-question h3 {
   margin: 0;
   font-size: 1rem;
-  line-height: 1.4;
+  line-height: 1.45;
+  color: #e9f0ff;
 }
 
 .options {
