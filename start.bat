@@ -50,7 +50,7 @@ if defined HAS_DEPS (
 )
 
 echo [4/4] Iniciando servidor en http://localhost:%PORT%
-start "" cmd /c "timeout /t 2 /nobreak >nul && start \"\" http://localhost:%PORT%"
+start "" "http://localhost:%PORT%"
 
 echo.
 echo La app esta levantando. Esta ventana debe quedar abierta.

@@ -1,4 +1,3 @@
-import cgi
 import json
 import os
 import re
@@ -10,6 +9,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib import request as urlrequest
 from urllib.parse import urlparse
+from email.parser import BytesParser
+from email.policy import default
 
 BASE_DIR = Path(__file__).parent
 
@@ -146,6 +147,37 @@ def extract_text_from_upload(filename: str, payload: bytes) -> str:
     return ""
 
 
+
+
+def parse_uploaded_file(content_type: str, payload: bytes) -> tuple[str, bytes]:
+    if "multipart/form-data" not in content_type.lower():
+        raise ValueError("Formato de envío inválido. Usa multipart/form-data.")
+
+    envelope = (
+        f"Content-Type: {content_type}\r\nMIME-Version: 1.0\r\n\r\n".encode("utf-8")
+        + payload
+    )
+    message = BytesParser(policy=default).parsebytes(envelope)
+    if not message.is_multipart():
+        raise ValueError("No se recibió un formulario multipart válido.")
+
+    for part in message.iter_parts():
+        if part.get_content_disposition() != "form-data":
+            continue
+        if part.get_param("name", header="content-disposition") != "file":
+            continue
+
+        filename = Path(part.get_filename() or "").name
+        if not filename:
+            raise ValueError("Debes subir un archivo.")
+
+        file_payload = part.get_payload(decode=True) or b""
+        if not file_payload:
+            raise ValueError("El archivo está vacío.")
+        return filename, file_payload
+
+    raise ValueError("Debes subir un archivo en el campo 'file'.")
+
 def summarize_with_ai(text: str) -> str:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -209,29 +241,13 @@ class AppHandler(BaseHTTPRequestHandler):
             self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
             return
 
-        form = cgi.FieldStorage(
-            fp=self.rfile,
-            headers=self.headers,
-            environ={
-                "REQUEST_METHOD": "POST",
-                "CONTENT_TYPE": self.headers.get("Content-Type", ""),
-                "CONTENT_LENGTH": self.headers.get("Content-Length", "0"),
-            },
-        )
-
-        if "file" not in form:
-            self._send_json({"error": "Debes subir un archivo."}, 400)
-            return
-
-        file_item = form["file"]
-        filename = Path(file_item.filename or "").name
-        if not filename:
-            self._send_json({"error": "Debes subir un archivo."}, 400)
-            return
+        content_type = self.headers.get("Content-Type", "")
+        content_length = int(self.headers.get("Content-Length", "0") or 0)
+        payload = self.rfile.read(content_length)
 
         try:
-            payload = file_item.file.read()
-            text = clean_text(extract_text_from_upload(filename, payload))
+            filename, file_payload = parse_uploaded_file(content_type, payload)
+            text = clean_text(extract_text_from_upload(filename, file_payload))
         except Exception as exc:
             self._send_json({"error": f"No se pudo leer el archivo: {exc}"}, 400)
             return
