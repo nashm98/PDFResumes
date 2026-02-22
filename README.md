@@ -55,6 +55,7 @@ Si quieres usarlo como programa de Windows:
 - Haz doble clic en `run_pdfresumes.bat`.
 - Ese archivo hace todo automáticamente:
   - si no existe `dist\PDFResumesApp.exe`, lo compila;
+  - si detecta un ejecutable antiguo sin marca de build, lo recompila para incluir dependencias;
   - luego abre la app de escritorio sin que tengas que ejecutar más pasos.
 
 ## Modo escritorio

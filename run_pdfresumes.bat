@@ -3,12 +3,23 @@ setlocal
 cd /d "%~dp0"
 
 set "EXE_PATH=dist\PDFResumesApp.exe"
+set "BUILD_INFO=dist\PDFResumesApp.buildinfo"
 
 if not exist "%EXE_PATH%" (
   echo [INFO] No existe %EXE_PATH%. Se compilara automaticamente...
   call build_exe.bat
   if errorlevel 1 (
     echo [ERROR] No se pudo construir el ejecutable.
+    pause
+    exit /b 1
+  )
+)
+
+if not exist "%BUILD_INFO%" (
+  echo [INFO] Ejecutable antiguo detectado. Se recompilara para incluir dependencias...
+  call build_exe.bat
+  if errorlevel 1 (
+    echo [ERROR] No se pudo reconstruir el ejecutable.
     pause
     exit /b 1
   )
