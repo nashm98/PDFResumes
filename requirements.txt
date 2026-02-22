@@ -1,0 +1,2 @@
+# No dependencies required for local fallback mode.
+# Optional: install `openai` if quieres resumir con API de OpenAI.

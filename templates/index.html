@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resumen + Quiz de Documentos</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <h1>📘 Resume tus documentos con IA</h1>
+        <p>
+          Sube un archivo (PDF, Word, TXT y más), obtén un resumen inmediato y practica con un quiz de opción múltiple.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="upload-form">
+          <label for="file" class="label">Archivo</label>
+          <input id="file" name="file" type="file" required />
+          <button id="submit-btn" type="submit">Procesar archivo</button>
+        </form>
+        <p class="hint">Formatos: .pdf .docx .txt .md .csv .json .log .rtf</p>
+      </section>
+
+      <section id="status" class="status"></section>
+
+      <section id="summary-section" class="card hidden">
+        <h2>📝 Resumen</h2>
+        <pre id="summary-output"></pre>
+      </section>
+
+      <section id="quiz-section" class="card hidden">
+        <h2>🎯 Quiz</h2>
+        <div id="quiz-output"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
