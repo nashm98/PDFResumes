@@ -9,13 +9,23 @@ const submitBtn = document.getElementById('submit-btn');
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
-  statusEl.style.color = isError ? '#ff9a9a' : '#a8abd9';
+  statusEl.style.color = isError ? '#ffb4b4' : '#a9b7da';
+}
+
+function showSection(section) {
+  section.hidden = false;
+  section.classList.remove('hidden');
+}
+
+function hideSection(section) {
+  section.hidden = true;
+  section.classList.add('hidden');
 }
 
 function renderQuiz(quiz) {
   quizOutput.innerHTML = '';
 
-  if (!quiz.length) {
+  if (!Array.isArray(quiz) || quiz.length === 0) {
     quizOutput.innerHTML = '<p>No fue posible generar preguntas para este documento.</p>';
     return;
   }
@@ -31,7 +41,7 @@ function renderQuiz(quiz) {
     const list = document.createElement('ul');
     list.className = 'options';
 
-    item.options.forEach((option) => {
+    (item.options || []).forEach((option) => {
       const li = document.createElement('li');
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -57,6 +67,15 @@ function renderQuiz(quiz) {
   });
 }
 
+async function responseToJsonSafe(response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text || 'Respuesta inválida del servidor.');
+  }
+}
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -66,6 +85,11 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  hideSection(summarySection);
+  hideSection(quizSection);
+  summaryOutput.textContent = '';
+  quizOutput.innerHTML = '';
+
   const body = new FormData();
   body.append('file', file);
 
@@ -73,22 +97,24 @@ form.addEventListener('submit', async (event) => {
   setStatus('Procesando documento...');
 
   try {
-    const response = await fetch('/api/process', { method: 'POST', body });
-    const data = await response.json();
+    const response = await fetch('./api/process', {
+      method: 'POST',
+      body,
+    });
 
+    const data = await responseToJsonSafe(response);
     if (!response.ok) {
       throw new Error(data.error || 'Error inesperado al procesar el archivo.');
     }
 
-    summaryOutput.textContent = data.summary;
+    summaryOutput.textContent = data.summary || 'No se pudo generar resumen.';
     renderQuiz(data.quiz || []);
 
-    summarySection.classList.remove('hidden');
-    quizSection.classList.remove('hidden');
-
+    showSection(summarySection);
+    showSection(quizSection);
     setStatus(`Archivo procesado: ${data.filename} (${data.text_length} caracteres leídos).`);
   } catch (error) {
-    setStatus(error.message, true);
+    setStatus(error.message || 'Ocurrió un error al procesar el archivo.', true);
   } finally {
     submitBtn.disabled = false;
   }

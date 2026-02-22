@@ -9,6 +9,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib import request as urlrequest
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).parent
 
@@ -150,9 +151,12 @@ def summarize_with_ai(text: str) -> str:
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         method="POST",
     )
-    with urlrequest.urlopen(req, timeout=60) as response:
-        data = json.loads(response.read().decode("utf-8"))
-    return data.get("output_text", "").strip() or summarize_locally(text)
+    try:
+        with urlrequest.urlopen(req, timeout=60) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        return data.get("output_text", "").strip() or summarize_locally(text)
+    except Exception:
+        return summarize_locally(text)
 
 
 class AppHandler(BaseHTTPRequestHandler):
@@ -175,26 +179,33 @@ class AppHandler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_GET(self):
-        if self.path == "/":
+        path = urlparse(self.path).path
+        if path in {"/", "/index.html"}:
             self._send_file(BASE_DIR / "templates" / "index.html")
             return
-        if self.path.startswith("/static/"):
-            rel = self.path.removeprefix("/static/")
-            file_path = BASE_DIR / "static" / rel
-            if file_path.exists() and file_path.is_file():
+        if path.startswith("/static/"):
+            rel = path.removeprefix("/static/")
+            file_path = (BASE_DIR / "static" / rel).resolve()
+            static_root = (BASE_DIR / "static").resolve()
+            if static_root in file_path.parents and file_path.exists() and file_path.is_file():
                 self._send_file(file_path)
                 return
         self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
     def do_POST(self):
-        if self.path != "/api/process":
+        path = urlparse(self.path).path
+        if path != "/api/process":
             self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
             return
 
         form = cgi.FieldStorage(
             fp=self.rfile,
             headers=self.headers,
-            environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")},
+            environ={
+                "REQUEST_METHOD": "POST",
+                "CONTENT_TYPE": self.headers.get("Content-Type", ""),
+                "CONTENT_LENGTH": self.headers.get("Content-Length", "0"),
+            },
         )
 
         if "file" not in form:

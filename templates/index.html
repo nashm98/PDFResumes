@@ -3,40 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resumen + Quiz de Documentos</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <title>DocuMentor IA | Resumen y Quiz de documentos</title>
+    <meta name="description" content="Sube PDF, Word, TXT y más para obtener resumen y quiz automático con IA." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="static/styles.css" />
   </head>
   <body>
+    <div class="bg-glow"></div>
     <main class="container">
-      <header class="hero">
-        <h1>📘 Resume tus documentos con IA</h1>
-        <p>
-          Sube un archivo (PDF, Word, TXT y más), obtén un resumen inmediato y practica con un quiz de opción múltiple.
-        </p>
+      <header class="hero card">
+        <div>
+          <p class="badge">Plataforma segura de estudio</p>
+          <h1>Convierte tus documentos en <span>resúmenes claros</span> y un <span>quiz interactivo</span></h1>
+          <p class="subtitle">
+            Sube un archivo de lectura y en segundos recibe una síntesis en español más preguntas de práctica tipo test.
+          </p>
+        </div>
+        <ul class="hero-points">
+          <li>✅ Fácil de usar</li>
+          <li>🔐 Sin pasos técnicos</li>
+          <li>⚡ Resultado inmediato</li>
+        </ul>
       </header>
 
-      <section class="card">
-        <form id="upload-form">
-          <label for="file" class="label">Archivo</label>
-          <input id="file" name="file" type="file" required />
-          <button id="submit-btn" type="submit">Procesar archivo</button>
+      <section class="card upload-card">
+        <form id="upload-form" class="upload-form">
+          <label for="file" class="label">Selecciona tu archivo</label>
+          <input
+            id="file"
+            name="file"
+            type="file"
+            accept=".pdf,.docx,.txt,.md,.csv,.json,.log,.rtf"
+            required
+          />
+          <button id="submit-btn" type="submit">Generar resumen y quiz</button>
         </form>
-        <p class="hint">Formatos: .pdf .docx .txt .md .csv .json .log .rtf</p>
+        <p class="hint">Formatos soportados: .pdf, .docx, .txt, .md, .csv, .json, .log, .rtf</p>
+        <section id="status" class="status" aria-live="polite"></section>
       </section>
 
-      <section id="status" class="status"></section>
-
-      <section id="summary-section" class="card hidden">
-        <h2>📝 Resumen</h2>
+      <section id="summary-section" class="card hidden" hidden>
+        <h2>📝 Resumen del documento</h2>
         <pre id="summary-output"></pre>
       </section>
 
-      <section id="quiz-section" class="card hidden">
-        <h2>🎯 Quiz</h2>
+      <section id="quiz-section" class="card hidden" hidden>
+        <h2>🎯 Quiz de comprensión</h2>
         <div id="quiz-output"></div>
       </section>
     </main>
 
-    <script src="/static/app.js"></script>
+    <script src="static/app.js"></script>
   </body>
 </html>
