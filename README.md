@@ -48,7 +48,7 @@ Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y rec
 Si quieres usarlo como programa de Windows:
 
 1. Ejecuta `build_exe.bat` (doble clic).
-2. Esto genera `dist\PDFResumes.exe`.
+2. Esto genera `dist\PDFResumes.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
 3. Abre `PDFResumes.exe` y se levantará la app + navegador automáticamente.
 
 ## Variables opcionales

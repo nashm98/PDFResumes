@@ -26,7 +26,7 @@ if errorlevel 1 (
 )
 
 echo [3/3] Generando ejecutable...
-call %PYTHON_CMD% -m PyInstaller --onefile --name PDFResumes launcher.py
+call %PYTHON_CMD% -m PyInstaller --onefile --name PDFResumes --hidden-import pypdf launcher.py
 if errorlevel 1 (
   echo [ERROR] Fallo la generacion del .exe.
   pause

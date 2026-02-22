@@ -2,6 +2,7 @@ import threading
 import time
 import webbrowser
 
+import pypdf  # noqa: F401 - required so PyInstaller bundles PDF parser
 from app import run
 
 
