@@ -40,9 +40,9 @@ Este script:
   - verifica Python,
   - crea/usa `.venv`,
   - instala dependencias (`requirements.txt`),
-  - valida si el puerto `8000` ya está en uso,
-  - abre `http://localhost:8000`,
-  - y deja corriendo el servidor.
+  - verifica si ya hay un servidor HTTP activo en `127.0.0.1:8000`,
+  - si no existe, levanta `app.py`, espera salud del servidor y recién ahí abre el navegador,
+  - si falla, muestra log de diagnóstico en pantalla.
 
 Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y recarga la página.
 
