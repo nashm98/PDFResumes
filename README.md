@@ -10,6 +10,8 @@ Aplicación web para resumir documentos y generar quizzes tipo preguntas con alt
   - Con fallback local automático (sin API key).
 - Quiz de opción múltiple basado en el documento.
 
+> Nota: para leer PDFs se usa `pypdf` (incluido en `requirements.txt`).
+
 ## Instalación
 ```bash
 python -m venv .venv
@@ -43,4 +45,3 @@ Este archivo prepara `.venv`, instala dependencias si las hay y abre `http://loc
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.
 - `OPENAI_MODEL`: modelo a usar (por defecto: `gpt-4.1-mini`).
-

@@ -2,8 +2,8 @@ import cgi
 import json
 import os
 import re
-import subprocess
 import tempfile
+import zipfile
 from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -97,17 +97,28 @@ def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
 
 
 def extract_pdf_text(file_path: Path) -> str:
-    result = subprocess.run(["pdftotext", str(file_path), "-"], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError("No se pudo leer PDF. Verifica que 'pdftotext' esté disponible.")
-    return result.stdout
+    try:
+        from pypdf import PdfReader
+    except ImportError as exc:
+        raise RuntimeError(
+            "No se pudo leer PDF: falta la dependencia 'pypdf'. "
+            "Ejecuta start.bat nuevamente o instala con 'pip install -r requirements.txt'."
+        ) from exc
+
+    reader = PdfReader(str(file_path))
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    if not clean_text(text):
+        raise RuntimeError("No se encontró texto legible dentro del PDF.")
+    return text
 
 
 def extract_docx_text(file_path: Path) -> str:
-    result = subprocess.run(["unzip", "-p", str(file_path), "word/document.xml"], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError("No se pudo leer DOCX. Verifica que 'unzip' esté disponible.")
-    xml = result.stdout
+    try:
+        with zipfile.ZipFile(file_path) as zf:
+            xml = zf.read("word/document.xml").decode("utf-8", errors="ignore")
+    except Exception as exc:
+        raise RuntimeError("No se pudo leer DOCX: archivo inválido o dañado.") from exc
+
     text = re.sub(r"<[^>]+>", " ", xml)
     return text
 
