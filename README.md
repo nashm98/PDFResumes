@@ -48,14 +48,17 @@ Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y rec
 Si quieres usarlo como programa de Windows:
 
 1. Ejecuta `build_exe.bat` (doble clic).
-2. Esto genera `dist\PDFResumes.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
-3. Abre `PDFResumes.exe` y se levantará la app + navegador automáticamente.
+2. Esto genera `dist\PDFResumesApp.exe` incluyendo la dependencia de PDF (`pypdf`) dentro del ejecutable.
+3. Abre `PDFResumesApp.exe` y tendrás una aplicación de escritorio (sin abrir navegador).
 
 ## Un solo archivo para ejecutar todo en Windows
 - Haz doble clic en `run_pdfresumes.bat`.
 - Ese archivo hace todo automáticamente:
-  - si no existe `dist\PDFResumes.exe`, lo compila;
-  - luego abre la app sin que tengas que ejecutar más pasos.
+  - si no existe `dist\PDFResumesApp.exe`, lo compila;
+  - luego abre la app de escritorio sin que tengas que ejecutar más pasos.
+
+## Modo escritorio
+- `desktop_app.py` ejecuta la app como interfaz nativa de Windows (Tkinter), sin servidor web ni navegador.
 
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.

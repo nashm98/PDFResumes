@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 
-set "EXE_PATH=dist\PDFResumes.exe"
+set "EXE_PATH=dist\PDFResumesApp.exe"
 
 if not exist "%EXE_PATH%" (
   echo [INFO] No existe %EXE_PATH%. Se compilara automaticamente...
