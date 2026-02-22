@@ -41,8 +41,10 @@ Este script:
   - crea/usa `.venv`,
   - instala dependencias (`requirements.txt`),
   - verifica si ya hay un servidor HTTP activo en `127.0.0.1:8000`,
-  - si no existe, levanta `app.py`, espera salud del servidor y recién ahí abre el navegador,
+  - si no existe, levanta `app.py`, espera salud del puerto y recién ahí abre el navegador,
   - si falla, muestra log de diagnóstico en pantalla.
+
+> Nota: el launcher ya no depende de PowerShell para el healthcheck (evita cuelgues silenciosos en algunos Windows).
 
 Si al abrirse el navegador aparece error de conexión, espera 2-3 segundos y recarga la página.
 

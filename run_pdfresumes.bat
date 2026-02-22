@@ -5,8 +5,8 @@ cd /d "%~dp0"
 set "VENV_DIR=%CD%\.venv"
 set "PORT=8000"
 set "APP_URL=http://127.0.0.1:%PORT%"
-set "HEALTH_URL=%APP_URL%/"
 set "LOG_FILE=%TEMP%\pdfresumes_server.log"
+set "STATUS_FILE=%TEMP%\pdfresumes_port_status.txt"
 
 echo [1/6] Verificando Python...
 where py >nul 2>nul
@@ -46,12 +46,17 @@ if exist requirements.txt (
 )
 
 echo [4/6] Verificando si ya hay servidor activo en %APP_URL% ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r=Invoke-WebRequest -Uri '%HEALTH_URL%' -UseBasicParsing -TimeoutSec 2; if($r.StatusCode -ge 200 -and $r.StatusCode -lt 500){ exit 0 } else { exit 1 } } catch { exit 1 }"
-if %errorlevel%==0 (
-  echo [INFO] Ya hay un servicio HTTP respondiendo en %APP_URL%.
-  echo [INFO] Abriendo navegador...
+call "%VENV_DIR%\Scripts\python.exe" -c "import socket; s=socket.socket(); s.settimeout(1.0); rc=s.connect_ex(('127.0.0.1', %PORT%)); s.close(); print('UP' if rc==0 else 'DOWN')" > "%STATUS_FILE%"
+set "PORT_STATUS=DOWN"
+if exist "%STATUS_FILE%" (
+  set /p PORT_STATUS=<"%STATUS_FILE%"
+  del /q "%STATUS_FILE%" >nul 2>nul
+)
+
+if /I "%PORT_STATUS%"=="UP" (
+  echo [INFO] Ya hay un servicio respondiendo en %APP_URL%.
   start "" "%APP_URL%"
-  echo [INFO] Si no ves PDFResumes, cierra la app que usa el puerto %PORT% y vuelve a ejecutar este archivo.
+  echo [INFO] Si no ves PDFResumes, cierra el proceso que usa el puerto %PORT% y ejecuta nuevamente.
   pause
   exit /b 0
 )
@@ -62,9 +67,9 @@ start "PDFResumesServer" /min cmd /c "cd /d \"%CD%\" && \"%VENV_DIR%\Scripts\pyt
 
 echo [6/6] Esperando a que el servidor responda...
 set "READY="
-for /L %%I in (1,1,30) do (
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $r=Invoke-WebRequest -Uri '%HEALTH_URL%' -UseBasicParsing -TimeoutSec 2; if($r.StatusCode -ge 200 -and $r.StatusCode -lt 500){ exit 0 } else { exit 1 } } catch { exit 1 }"
-  if !errorlevel! == 0 (
+for /L %%I in (1,1,40) do (
+  call "%VENV_DIR%\Scripts\python.exe" -c "import socket; s=socket.socket(); s.settimeout(1.0); rc=s.connect_ex(('127.0.0.1', %PORT%)); s.close(); raise SystemExit(0 if rc==0 else 1)"
+  if !errorlevel! EQU 0 (
     set "READY=1"
     goto :ready
   )
@@ -77,15 +82,15 @@ if defined READY (
   start "" "%APP_URL%"
   echo.
   echo PDFResumes esta en ejecucion.
-  echo Si deseas detenerlo, cierra la ventana "PDFResumesServer" o finaliza python.exe desde el Administrador de tareas.
+  echo Para detenerlo, cierra la ventana "PDFResumesServer" o finaliza python.exe.
   pause
   exit /b 0
 )
 
-echo [ERROR] El servidor no respondio a tiempo.
+echo [ERROR] El servidor no respondio en 40 segundos.
 if exist "%LOG_FILE%" (
   echo ---------- Ultimas lineas de log ----------
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Content -Path '%LOG_FILE%' -Tail 40"
+  type "%LOG_FILE%"
   echo -------------------------------------------
 )
 echo [TIP] Verifica si el puerto %PORT% esta ocupado o si el antivirus bloqueo Python.
