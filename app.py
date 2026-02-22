@@ -65,7 +65,11 @@ def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
         "usted", "ustedes", "ser", "estar", "haber", "tener", "hacer", "poder", "deber", "que", "del",
         "las", "los", "una", "uno", "unos", "unas", "por", "con", "sin",
     }
-    generic_words = {"proceso", "resultado", "principalmente", "tambien", "sistema", "metodo", "ocurre", "describe", "mejor", "segun", "texto", "punto", "dentro", "producen", "captura", "sirve", "liberan", "transforman"}
+    generic_words = {
+        "proceso", "resultado", "principalmente", "tambien", "sistema", "metodo", "ocurre", "describe",
+        "mejor", "segun", "texto", "punto", "dentro", "producen", "captura", "sirve", "liberan",
+        "transforman", "través", "general",
+    }
 
     def keywords_from_sentence(sentence: str) -> list[str]:
         words = re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence)
@@ -75,7 +79,7 @@ def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
             if len(w) > 5
             and w.lower() not in stopwords
             and w.lower() not in generic_words
-            and not w.lower().endswith(("mente", "cion", "sion"))
+            and not w.lower().endswith(("mente", "cion", "sion", "idad"))
         ]
         seen: set[str] = set()
         ordered: list[str] = []
@@ -87,68 +91,43 @@ def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
             ordered.append(word)
         return ordered
 
-    sentences = split_sentences(text)
-    usable = [s for s in sentences if len(s) > 60][:20]
-    if not usable:
+    sentences = [clean_text(s) for s in split_sentences(text) if len(clean_text(s)) > 60][:20]
+    if len(sentences) < 2:
         return []
 
     quiz: list[QuizQuestion] = []
-    pool_keywords: list[str] = []
     used_topics: set[str] = set()
-    for sentence in usable:
-        pool_keywords.extend(keywords_from_sentence(sentence)[:2])
 
-    for sentence in usable:
+    for sentence in sentences:
         if len(quiz) >= count:
             break
 
         sentence_keywords = keywords_from_sentence(sentence)
-        if not sentence_keywords:
-            continue
-
-        topic = sentence_keywords[0]
+        topic = sentence_keywords[0] if sentence_keywords else "contenido"
         if topic.lower() in used_topics:
             continue
-        question = f"Según el texto, ¿cuál afirmación describe mejor el punto sobre '{topic}'?"
 
-        correct = clean_text(sentence)
-        distractors: list[str] = []
+        question = f"Según el texto, ¿qué afirmación es correcta sobre '{topic}'?"
+        correct = sentence
 
-        for other in usable:
-            other_clean = clean_text(other)
-            if other_clean == correct or topic.lower() in other_clean.lower():
-                continue
-            distractors.append(other_clean)
-            if len(distractors) == 2:
-                break
+        distractors = [s for s in sentences if s != correct and topic.lower() not in s.lower()][:2]
+        negated = re.sub(r"\bes\b", "no es", correct, count=1, flags=re.IGNORECASE)
+        if negated != correct and negated not in distractors:
+            distractors.append(negated)
 
-        for alt in pool_keywords:
-            if len(distractors) >= 3:
-                break
-            if alt.lower() == topic.lower():
-                continue
-            replaced = re.sub(rf"\b{re.escape(topic)}\b", alt, correct, count=1, flags=re.IGNORECASE)
-            replaced = clean_text(replaced)
-            if replaced != correct and replaced not in distractors:
-                distractors.append(replaced)
-
-        if len(distractors) < 3:
-            continue
+        while len(distractors) < 3:
+            distractors.append("El texto no entrega información suficiente para este punto.")
 
         options = [correct] + distractors[:3]
         shift = len(quiz) % len(options)
         options = options[shift:] + options[:shift]
 
         used_topics.add(topic.lower())
-        quiz.append(
-            QuizQuestion(
-                question=question,
-                options=options,
-                answer=correct,
-            )
-        )
+        quiz.append(QuizQuestion(question=question, options=options, answer=correct))
 
     return quiz
+
+
 def extract_pdf_text(file_path: Path) -> str:
     try:
         from pypdf import PdfReader
@@ -248,6 +227,7 @@ def parse_uploaded_file(content_type: str, payload: bytes) -> tuple[str, bytes]:
         return filename, file_payload
 
     raise ValueError("Debes subir un archivo en el campo 'file'.")
+
 
 def summarize_with_ai(text: str) -> str:
     api_key = os.getenv("OPENAI_API_KEY")

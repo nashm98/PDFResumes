@@ -1,4 +1,4 @@
-# PDFResumes Web App
+# PDFResumes
 
 Aplicación web para resumir documentos y generar quizzes tipo preguntas con alternativas.
 
