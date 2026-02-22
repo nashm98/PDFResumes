@@ -3,7 +3,7 @@
 Aplicación web para resumir documentos y generar quizzes tipo preguntas con alternativas.
 
 ## Características
-- Subida de archivos: **PDF, DOCX, TXT, MD, CSV, JSON, LOG, RTF**.
+- Subida de archivos: **PDF, DOCX, DOC, TXT, MD, CSV, JSON, LOG, RTF**.
 - Extracción de texto según formato.
 - Resumen en español:
   - Con IA (si defines `OPENAI_API_KEY`).
@@ -58,7 +58,7 @@ Si quieres usarlo como programa de Windows:
   - luego abre la app de escritorio sin que tengas que ejecutar más pasos.
 
 ## Modo escritorio
-- `desktop_app.py` ejecuta la app como interfaz nativa de Windows (Tkinter), sin servidor web ni navegador.
+- `desktop_app.py` ejecuta la app como interfaz nativa de Windows (Tkinter), sin servidor web ni navegador, con interfaz visual moderna en escala de negros.
 
 ## Variables opcionales
 - `OPENAI_API_KEY`: activa generación con IA.

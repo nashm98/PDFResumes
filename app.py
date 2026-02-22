@@ -20,6 +20,7 @@ ALLOWED_EXTENSIONS = {
     ".rtf",
     ".pdf",
     ".docx",
+    ".doc",
     ".csv",
     ".json",
     ".log",
@@ -64,11 +65,18 @@ def generate_quiz_locally(text: str, count: int = 5) -> list[QuizQuestion]:
         "usted", "ustedes", "ser", "estar", "haber", "tener", "hacer", "poder", "deber", "que", "del",
         "las", "los", "una", "uno", "unos", "unas", "por", "con", "sin",
     }
-    generic_words = {"proceso", "resultado", "principalmente", "tambien", "sistema", "metodo"}
+    generic_words = {"proceso", "resultado", "principalmente", "tambien", "sistema", "metodo", "ocurre", "describe", "mejor", "segun", "texto", "punto", "dentro", "producen", "captura", "sirve", "liberan", "transforman"}
 
     def keywords_from_sentence(sentence: str) -> list[str]:
         words = re.findall(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]+", sentence)
-        ranked = [w for w in words if len(w) > 5 and w.lower() not in stopwords and w.lower() not in generic_words]
+        ranked = [
+            w
+            for w in words
+            if len(w) > 5
+            and w.lower() not in stopwords
+            and w.lower() not in generic_words
+            and not w.lower().endswith(("mente", "cion", "sion"))
+        ]
         seen: set[str] = set()
         ordered: list[str] = []
         for word in ranked:
@@ -168,6 +176,23 @@ def extract_docx_text(file_path: Path) -> str:
     return text
 
 
+def extract_doc_text(file_path: Path) -> str:
+    """Fallback básico para .doc clásico.
+
+    Los archivos .doc binarios no tienen un parser estándar en la librería base,
+    así que intentamos recuperar texto visible para evitar fallar en Windows.
+    """
+    data = file_path.read_bytes()
+    text = data.decode("latin-1", errors="ignore")
+    text = re.sub(r"[^\x20-\x7E\xA0-\xFF\n\r\t]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) < 80:
+        raise RuntimeError(
+            "No se pudo leer DOC clásico (.doc). Convierte el archivo a .docx o .txt e inténtalo de nuevo."
+        )
+    return text
+
+
 def extract_text_from_upload(filename: str, payload: bytes) -> str:
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -185,6 +210,8 @@ def extract_text_from_upload(filename: str, payload: bytes) -> str:
             return extract_pdf_text(tmp_path)
         if ext == ".docx":
             return extract_docx_text(tmp_path)
+        if ext == ".doc":
+            return extract_doc_text(tmp_path)
     finally:
         tmp_path.unlink(missing_ok=True)
 
